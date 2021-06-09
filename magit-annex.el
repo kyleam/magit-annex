@@ -145,6 +145,10 @@ program used to open the unused file."
   :package-version '(magit-annex . "1.3.0")
   :type 'boolean)
 
+(defcustom magit-annex-file-wildcard-regexp "[[*?]"
+  "Regular expression that matches file names which should have wildcards expanded."
+  :type 'regexp)
+
 
 ;;; Transients
 ;;;; Infix Arguments
@@ -460,7 +464,7 @@ With a prefix argument, prompt for FILE.
      ((member "*all*" input) nil)
      (t
       (cl-mapcan (lambda (f)
-                   (if (string-match-p "[[.*+\\^$?]" f)
+                   (if (string-match-p magit-annex-file-wildcard-regexp f)
                        (file-expand-wildcards f)
                      (list f)))
                  input)))))
@@ -499,10 +503,11 @@ arguments don't include --from."
                       (list file))
                     (and (derived-mode-p 'dired-mode)
                          (dired-get-marked-files t))))
-         (default (mapconcat #'identity files ",")))
+         (default (mapconcat #'identity files "|"))
+         (crm-separator "[ 	]*|[ 	]*"))
     (list
      (magit-annex-read-files
-      (concat "File,s"
+      (concat "File|s"
               (and files (format " (%s)" default))
               ": ")
       (and (or (not unless-from)
